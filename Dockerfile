@@ -1,6 +1,15 @@
 FROM mhart/alpine-node:latest
-LABEL version="1.0"
-LABEL description="Run Google Chrome's Lighthouse Audit in the background"
+
+LABEL description "Run Google Chrome's Lighthouse Audit in the background"
+
+LABEL version "1.0.1"
+
+LABEL author "Matthias Winkelmann <m@matthi.coffee>"
+LABEL org.label-schema.vcs-url "https://github.com/MatthiasWinkelmann/lighthouse-chromium-alpine-docker"
+LABEL org.label-schema.uri "https://matthi.coffee"
+LABEL org.label-schema.usage "/README.md"
+LABEL org.label-schema.schema-version "1.0"
+
 WORKDIR /lighthouse
 
 USER root
