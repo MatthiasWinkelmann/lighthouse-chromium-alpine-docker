@@ -2,13 +2,12 @@ FROM mhart/alpine-node:latest
 
 LABEL description "Run Google Chrome's Lighthouse Audit in the background"
 
-LABEL version "1.0.1"
+LABEL version="1.0.3"
 
-LABEL author "Matthias Winkelmann <m@matthi.coffee>"
-LABEL org.label-schema.vcs-url "https://github.com/MatthiasWinkelmann/lighthouse-chromium-alpine-docker"
-LABEL org.label-schema.uri "https://matthi.coffee"
-LABEL org.label-schema.usage "/README.md"
-LABEL org.label-schema.schema-version "1.0"
+LABEL author="Matthias Winkelmann <m@matthi.coffee>"
+LABEL coffee.matthi.vcs-url="https://github.com/MatthiasWinkelmann/lighthouse-chromium-alpine-docker"
+LABEL coffee.matthi.uri="https://matthi.coffee"
+LABEL coffee.matthi.usage="/README.md"
 
 WORKDIR /lighthouse
 
@@ -23,6 +22,7 @@ RUN echo "http://dl-2.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories 
 #-----------------
 RUN apk -U --no-cache upgrade && \
     apk --no-cache add xvfb\
+        openrc\
         dbus-x11\
         libx11\
         xorg-server\
@@ -46,6 +46,7 @@ ENV GEOMETRY "$SCREEN_WIDTH""x""$SCREEN_HEIGHT""x""$SCREEN_DEPTH"
 RUN echo $TZ > /etc/timezone
 
 ADD lighthouse-chromium-xvfb.sh .
+ADD test.sh .
 RUN npm --global install yarn && yarn global add lighthouse
 RUN mkdir output
 
@@ -62,5 +63,8 @@ RUN rm -rf /var/lib/apt/lists/* \
     /usr/lib/node_modules/npm/html \
     /usr/lib/node_modules/npm/scripts
 
-
+# Alpine's grep is a BusyBox binary which doesn't provide
+# the -R (recursive, following symlinks) switch.
+#ADD grep ./grep
+# RUN alias grep=/lighthouse/grep
 ENTRYPOINT ["/lighthouse/lighthouse-chromium-xvfb.sh"]

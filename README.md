@@ -16,3 +16,9 @@ Processes within the container cannot easily access the host's file system. You 
 ```shell
  run -v  ./output/:/lighthouse/output/ lighthouse-chromium-alpine-docker --output-path=/lighthouse/output/results.html --save-assets --save-artifacts --output=html https://google.com
 ```
+
+Run the tesT:
+
+```shell
+docker run -it --rm --entrypoint=sh lighthouse test.sh
+```
