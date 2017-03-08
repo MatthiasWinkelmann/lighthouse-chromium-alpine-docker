@@ -13,17 +13,23 @@ XVFB_WHD=${XVFB_WHD:-1280x720x16}
 
 export DISPLAY=:99
 
+
 # Start Xvfb
-Xvfb :99 -ac -screen 0 $XVFB_WHD -nolisten tcp &
+dbus-run-session -- Xvfb :99 -ac -screen 0 $XVFB_WHD -nolisten tcp &
 
 xvfb=$!
 
+while [  1 -gt $xvfb  ]; do echo "waiting for Xvfb to start: $xvfb"; sleep 1; done
+
+echo "xvfb started"
 
 
-
-/usr/bin/chromium-browser --no-sandbox --user-data-dir=$TMP_PROFILE_DIR --start-maximized --no-first-run --remote-debugging-port=9222 "about:blank" &
+dbus-run-session -- /usr/bin/chromium-browser --no-sandbox --user-data-dir=$TMP_PROFILE_DIR --start-maximized --no-first-run --remote-debugging-port=9222 "about:blank" &
 
 chromium=$!
 
-echo $@
-lighthouse $@
+while [ 1 -gt $chromium ]; do echo "waiting for chromium to start"; sleep 1; done
+
+echo "chromium started"
+
+lighthouse --port=9222 --disable-webgl --skip-autolaunch --disable-cpu-throttling=true $@
