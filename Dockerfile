@@ -2,7 +2,7 @@ FROM mhart/alpine-node:latest
 
 LABEL description "Run Google Chrome's Lighthouse Audit in the background"
 
-LABEL version="1.0.3"
+LABEL version="1.0.5"
 
 LABEL author="Matthias Winkelmann <m@matthi.coffee>"
 LABEL coffee.matthi.vcs-url="https://github.com/MatthiasWinkelmann/lighthouse-chromium-alpine-docker"
@@ -27,7 +27,8 @@ RUN apk -U --no-cache upgrade && \
         libx11\
         xorg-server\
         chromium\
-        ttf-opensans
+        ttf-opensans\
+        wait4ports
 #-----------------
 # Set ENV and change mode
 #-----------------
@@ -44,6 +45,8 @@ ENV DISPLAY :99
 ENV GEOMETRY "$SCREEN_WIDTH""x""$SCREEN_HEIGHT""x""$SCREEN_DEPTH"
 
 RUN echo $TZ > /etc/timezone
+
+RUN rc-update add dbus default
 
 ADD lighthouse-chromium-xvfb.sh .
 ADD test.sh .
