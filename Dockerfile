@@ -2,7 +2,7 @@ FROM mhart/alpine-node:latest
 
 LABEL description "Run Google Chrome's Lighthouse Audit in the background"
 
-LABEL version="1.0.5"
+LABEL version="1.0.7"
 
 LABEL author="Matthias Winkelmann <m@matthi.coffee>"
 LABEL coffee.matthi.vcs-url="https://github.com/MatthiasWinkelmann/lighthouse-chromium-alpine-docker"
@@ -37,8 +37,8 @@ ENV LIGHTHOUSE_CHROMIUM_PATH /usr/bin/chromium-browser
 ENV TZ "Europe/Berlin"
 ENV DEBIAN_FRONTEND noninteractive
 ENV DEBCONF_NONINTERACTIVE_SEEN true
-ENV SCREEN_WIDTH 1360
-ENV SCREEN_HEIGHT 1020
+ENV SCREEN_WIDTH 750
+ENV SCREEN_HEIGHT 1334
 ENV SCREEN_DEPTH 24
 ENV DISPLAY :99
 #:99.0
@@ -48,8 +48,6 @@ RUN echo $TZ > /etc/timezone
 
 RUN rc-update add dbus default
 
-ADD lighthouse-chromium-xvfb.sh .
-ADD test.sh .
 RUN npm --global install yarn && yarn global add lighthouse
 RUN mkdir output
 
@@ -66,8 +64,15 @@ RUN rm -rf /var/lib/apt/lists/* \
     /usr/lib/node_modules/npm/html \
     /usr/lib/node_modules/npm/scripts
 
+
+ADD lighthouse-chromium-xvfb.sh .
+ADD test.sh .
+
 # Alpine's grep is a BusyBox binary which doesn't provide
 # the -R (recursive, following symlinks) switch.
 #ADD grep ./grep
 # RUN alias grep=/lighthouse/grep
+
 ENTRYPOINT ["/lighthouse/lighthouse-chromium-xvfb.sh"]
+
+CMD ["--skip-autolaunch","--disable-cpu-throttling=true","--output-path=/tmp/test-report.html", "--output=pretty", "https://matthi.coffee/lighthouse-chromium-headless-docker"]

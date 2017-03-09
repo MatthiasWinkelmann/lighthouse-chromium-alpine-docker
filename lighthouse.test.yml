@@ -1,3 +1,2 @@
 sut:
    build: .
-   command: /lighthouse/test.sh

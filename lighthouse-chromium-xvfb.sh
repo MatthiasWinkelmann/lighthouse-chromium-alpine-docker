@@ -6,7 +6,11 @@ _kill_procs() {
   kill -TERM $xvfb
 }
 
-/usr/bin/dbus-uuidgen --ensure=/etc/machine-id
+testing=0
+echo $@ | grep -q -F 'matthi.coffee' && testing=1;
+if [ "$testing" -eq "1" ]; then
+   printf "\n\nNo options given, running test...\n\nRun with an URL, or '--help' to see options\n\n";
+fi
 
 # We need to test if /var/run/dbus exists, since script will fail if it does not
 
@@ -25,11 +29,14 @@ Xvfb ${DISPLAY} -ac -screen 0 ${GEOMETRY} -nolisten tcp &
 
 xvfb=$!
 
-while [  1 -gt $xvfb  ]; do echo "waiting for Xvfb to start: $xvfb"; sleep 1; done
+printf "Starting xvfb window server"
 
-echo "xvfb started"
+while [  1 -gt $xvfb  ]; do printf "waiting for Xvfb to start: $xvfb"; sleep 1; done
 
-echo "Starting chromium, with debugger on port $CHROME_DEBUGGING_POST"
+printf "xvfb started"
+
+printf "Starting chromium, with debugger on port $CHROME_DEBUGGING_POST"
+
 /usr/bin/chromium-browser \
 --no-sandbox \
 --user-data-dir=${TMP_PROFILE_DIR}  \
@@ -42,8 +49,17 @@ chromium=$!
 
 wait4ports tcp://127.0.0.1:$CHROME_DEBUGGING_PORT
 
-echo "chromium started"
+printf "chromium started"
 
-lighthouse --port=${CHROME_DEBUGGING_PORT} \
-   --skip-autolaunch \
-   --disable-cpu-throttling=true $@
+printf "launching lighthouse run"
+lighthouse $@
+
+if [ "$testing" -eq "1" ]; then
+   if grep -q -F "Best Practice" /tmp/test-report*; then
+      printf "Test succeeded!";
+      return 0;
+   fi
+
+   printf "Test failed!";
+   return 1;
+fi
