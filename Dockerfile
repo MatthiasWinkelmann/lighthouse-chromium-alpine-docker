@@ -9,7 +9,7 @@ LABEL coffee.matthi.vcs-url="https://github.com/MatthiasWinkelmann/lighthouse-ch
 LABEL coffee.matthi.uri="https://matthi.coffee"
 LABEL coffee.matthi.usage="/README.md"
 
-WORKDIR /lighthouse
+WORKDIR /
 
 USER root
 
@@ -26,9 +26,10 @@ RUN apk -U --no-cache upgrade && \
         dbus-x11\
         libx11\
         xorg-server\
-        chromium\
         ttf-opensans\
-        wait4ports
+        wait4ports\
+        chromium
+
 #-----------------
 # Set ENV and change mode
 #-----------------
@@ -40,7 +41,8 @@ ENV DEBCONF_NONINTERACTIVE_SEEN true
 ENV SCREEN_WIDTH 750
 ENV SCREEN_HEIGHT 1334
 ENV SCREEN_DEPTH 24
-ENV DISPLAY :99
+ENV DISPLAY :99.0
+ENV PATH /lighthouse/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 #:99.0
 ENV GEOMETRY "$SCREEN_WIDTH""x""$SCREEN_HEIGHT""x""$SCREEN_DEPTH"
 
@@ -48,15 +50,27 @@ RUN echo $TZ > /etc/timezone
 
 RUN rc-update add dbus default
 
-RUN npm --global install yarn && yarn global add lighthouse
-RUN mkdir output
 
+#RUN npm --global install yarn && yarn global add lighthouse
+
+# DEV
+
+RUN apk add git libressl
+
+RUN git clone https://github.com/GoogleChrome/lighthouse.git
+
+WORKDIR /lighthouse
+
+RUN npm install && npm run install-all && npm run build-all && npm link
+
+
+RUN apk del --force git libressl
 # Minimize size
 
 RUN apk del --force curl make gcc g++ python linux-headers binutils-gold gnupg
 
 RUN rm -rf /var/lib/apt/lists/* \
-    /var/cache/* \
+    /var/cache/apk/* \
     /usr/share/man \
     /tmp/* \
     /usr/lib/node_modules/npm/man \
@@ -71,6 +85,8 @@ ADD lighthouse-chromium-xvfb.sh .
 # the -R (recursive, following symlinks) switch.
 #ADD grep ./grep
 # RUN alias grep=/lighthouse/grep
+
+VOLUME /lighthouse/output
 
 ENTRYPOINT ["/lighthouse/lighthouse-chromium-xvfb.sh"]
 

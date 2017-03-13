@@ -1,1 +1,0 @@
-eval $(echo "/bin/grep $@" | sed -e "s/\-ER /\-Er /")

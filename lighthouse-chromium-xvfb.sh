@@ -22,7 +22,7 @@ start-stop-daemon --start --pidfile /var/run/dbus.pid --exec /usr/bin/dbus-daemo
 trap _kill_procs SIGTERM
 
 TMP_PROFILE_DIR=`mktemp -d -t chromium.XXXXXX`
-CHROME_DEBUGGING_PORT=9222
+export CHROME_DEBUGGING_PORT=9222
 
 # Start Xvfb
 Xvfb ${DISPLAY} -ac -screen 0 ${GEOMETRY} -nolisten tcp &
@@ -37,7 +37,7 @@ printf "xvfb started"
 
 printf "Starting chromium, with debugger on port $CHROME_DEBUGGING_POST"
 
-/usr/bin/chromium-browser \
+$LIGHTHOUSE_CHROMIUM_PATH \
 --no-sandbox \
 --user-data-dir=${TMP_PROFILE_DIR}  \
 --disable-webgl \
