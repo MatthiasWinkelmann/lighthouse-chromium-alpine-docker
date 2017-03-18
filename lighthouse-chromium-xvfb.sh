@@ -30,13 +30,13 @@ export CHROME_DEBUGGING_PORT=9222
 # Start Xvfb
 Xvfb ${DISPLAY} -ac +iglx -screen 0 ${GEOMETRY} -nolisten tcp & xvfb=$!
 
-printf "Starting xvfb window server"
+printf "Starting xvfb window server..."
 
-while [  1 -gt $xvfb  ]; do printf "waiting for Xvfb to start: $xvfb"; sleep 1; done
+while [  1 -gt $xvfb  ]; do printf "..."; sleep 1; done
 
-printf "xvfb started"
+printf "xvfb started\n\n"
 
-printf "Starting chromium, with debugger on port $CHROME_DEBUGGING_POST"
+printf "Starting chromium, with debugger on port $CHROME_DEBUGGING_POST...\n\n"
 
 # --disable-webgl \
 
@@ -51,18 +51,16 @@ chromium=$!
 
 wait4ports tcp://127.0.0.1:$CHROME_DEBUGGING_PORT
 
-printf "chromium started"
-
-printf "launching lighthouse run"
+printf "\n\n==============================\nlaunching lighthouse run\n==============================\n\n"
 
 if [ "$testing" -eq "1" ]; then
    lighthouse --skip-autolaunch --disable-cpu-throttling --output-path=/tmp/test-report.html --output=html https://google.com
    if grep -q -F "Best Practice" /tmp/test-report*; then
-      printf "Test succeeded!";
+      printf "\n\n==============================\nTest succeeded!\n==============================\n";
       return 0;
    fi
 
-   printf "Test failed!";
+   printf "\n\n==============================\nTest failed!\n==============================\n";
    return 1;
 else
    lighthouse $@

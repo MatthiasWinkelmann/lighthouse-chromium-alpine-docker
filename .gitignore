@@ -1,2 +1,5 @@
+package.json
+out
+/minimize
 /output/*
 !/output/.keep

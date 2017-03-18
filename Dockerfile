@@ -2,7 +2,7 @@ FROM mhart/alpine-node:latest
 
 LABEL description "Run Google Chrome's Lighthouse Audit in the background"
 
-LABEL version="1.0.7"
+LABEL version="1.0.8"
 
 LABEL author="Matthias Winkelmann <m@matthi.coffee>"
 LABEL coffee.matthi.vcs-url="https://github.com/MatthiasWinkelmann/lighthouse-chromium-alpine-docker"
@@ -16,7 +16,6 @@ USER root
 RUN echo "http://dl-2.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
 RUN echo "http://dl-2.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 RUN echo "http://dl-2.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-RUN echo "http://dl-2.alpinelinux.org/alpine/v3.2/main" >> /etc/apk/repositories
 
 #-----------------
 # Set ENV and change mode
@@ -36,7 +35,6 @@ ENV GEOMETRY "$SCREEN_WIDTH""x""$SCREEN_HEIGHT""x""$SCREEN_DEPTH"
 
 RUN echo $TZ > /etc/timezone
 
-
 #-----------------
 # Add packages
 #-----------------
@@ -48,26 +46,15 @@ RUN apk -U --no-cache add \
     xvfb \
     wait4ports \
     xorg-server \
-    dbus-x11 \
     dbus \
     ttf-freefont \
-    mesa-dri-swrast \
-    git
+    mesa-dri-swrast
 
-# DEV Version of lighthouse
-
-RUN apk -U --no-cache add git
-RUN git clone https://github.com/GoogleChrome/lighthouse.git
-WORKDIR /lighthouse
-RUN npm -g install yarn
-RUN yarn install
-RUN cd ./lighthouse-core && yarn install
-RUN cd ./lighthouse-cli && yarn install && tsc
-RUN npm run install-all && npm run build-all && npm link
+RUN npm --global install yarn && yarn global add lighthouse
 
 # Minimize size
 
-RUN apk del --force curl make gcc g++ python linux-headers binutils-gold gnupg git
+RUN apk del --purge --force curl make gcc g++ python linux-headers binutils-gold gnupg git zlib-dev apk-tools libc-utils
 
 RUN rm -rf /var/lib/apt/lists/* \
     /var/cache/apk/* \
@@ -77,7 +64,6 @@ RUN rm -rf /var/lib/apt/lists/* \
     /usr/lib/node_modules/npm/doc \
     /usr/lib/node_modules/npm/html \
     /usr/lib/node_modules/npm/scripts
-
 
 ADD lighthouse-chromium-xvfb.sh /lighthouse/lighthouse-chromium-xvfb.sh
 
