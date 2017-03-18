@@ -42,7 +42,7 @@ docker run -v ./output/:/lighthouse/output/ lighthouse --output-path=/lighthouse
 ## Testing
 
 ```shell
-docker run lighthouse
+docker run lighthouse test
 ```
 
 ## Links

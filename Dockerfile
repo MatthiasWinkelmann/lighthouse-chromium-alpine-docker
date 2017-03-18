@@ -13,22 +13,10 @@ WORKDIR /
 
 USER root
 
-RUN echo "http://dl-2.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories && \
-    echo "http://dl-2.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-    echo "http://dl-2.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-
-#-----------------
-# Add packages
-#-----------------
-RUN apk -U --no-cache upgrade && \
-    apk --no-cache add xvfb\
-        openrc\
-        dbus-x11\
-        libx11\
-        xorg-server\
-        ttf-opensans\
-        wait4ports\
-        chromium
+RUN echo "http://dl-2.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
+RUN echo "http://dl-2.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+RUN echo "http://dl-2.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN echo "http://dl-2.alpinelinux.org/alpine/v3.2/main" >> /etc/apk/repositories
 
 #-----------------
 # Set ENV and change mode
@@ -43,31 +31,43 @@ ENV SCREEN_HEIGHT 1334
 ENV SCREEN_DEPTH 24
 ENV DISPLAY :99.0
 ENV PATH /lighthouse/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-#:99.0
+
 ENV GEOMETRY "$SCREEN_WIDTH""x""$SCREEN_HEIGHT""x""$SCREEN_DEPTH"
 
 RUN echo $TZ > /etc/timezone
 
-RUN rc-update add dbus default
 
+#-----------------
+# Add packages
+#-----------------
 
-#RUN npm --global install yarn && yarn global add lighthouse
+RUN apk -U --no-cache update
+RUN apk -U --no-cache add \
+    zlib-dev \
+    chromium \
+    xvfb \
+    wait4ports \
+    xorg-server \
+    dbus-x11 \
+    dbus \
+    ttf-freefont \
+    mesa-dri-swrast \
+    git
 
-# DEV
+# DEV Version of lighthouse
 
-RUN apk add git libressl
-
+RUN apk -U --no-cache add git
 RUN git clone https://github.com/GoogleChrome/lighthouse.git
-
 WORKDIR /lighthouse
+RUN npm -g install yarn
+RUN yarn install
+RUN cd ./lighthouse-core && yarn install
+RUN cd ./lighthouse-cli && yarn install && tsc
+RUN npm run install-all && npm run build-all && npm link
 
-RUN npm install && npm run install-all && npm run build-all && npm link
-
-
-RUN apk del --force git libressl
 # Minimize size
 
-RUN apk del --force curl make gcc g++ python linux-headers binutils-gold gnupg
+RUN apk del --force curl make gcc g++ python linux-headers binutils-gold gnupg git
 
 RUN rm -rf /var/lib/apt/lists/* \
     /var/cache/apk/* \
@@ -79,15 +79,10 @@ RUN rm -rf /var/lib/apt/lists/* \
     /usr/lib/node_modules/npm/scripts
 
 
-ADD lighthouse-chromium-xvfb.sh .
-
-# Alpine's grep is a BusyBox binary which doesn't provide
-# the -R (recursive, following symlinks) switch.
-#ADD grep ./grep
-# RUN alias grep=/lighthouse/grep
+ADD lighthouse-chromium-xvfb.sh /lighthouse/lighthouse-chromium-xvfb.sh
 
 VOLUME /lighthouse/output
 
 ENTRYPOINT ["/lighthouse/lighthouse-chromium-xvfb.sh"]
 
-CMD ["--skip-autolaunch","--disable-cpu-throttling=true","--output-path=/tmp/test-report.html", "--output=pretty", "https://matthi.coffee/2017/lighthouse-chromium-headless-docker"]
+CMD ["test"]

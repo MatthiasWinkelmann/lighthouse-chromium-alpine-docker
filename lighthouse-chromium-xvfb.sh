@@ -7,16 +7,19 @@ _kill_procs() {
 }
 
 testing=0
-echo $@ | grep -q -F 'matthi.coffee' && testing=1;
-if [ "$testing" -eq "1" ]; then
-   printf "\n\nNo options given, running test...\n\nRun with an URL, or '--help' to see options\n\n";
+parameters=$@
+
+if [ $parameters == 'test' ]; then
+   testing=1;
+   parameters='--skip-autolaunch --disable-cpu-throttling --output-path=/tmp/test-report.html --output=html https://google.com"'
+   printf "\n\nRunning test...\n\nRun with an URL, or '--help' to see options\n\n";
 fi
 
 # We need to test if /var/run/dbus exists, since script will fail if it does not
 
 [ ! -e /var/run/dbus ] && mkdir /var/run/dbus
 
-start-stop-daemon --start --pidfile /var/run/dbus.pid --exec /usr/bin/dbus-daemon -- --system
+/usr/bin/dbus-daemon --system
 
 # Setup a trap to catch SIGTERM and relay it to child processes
 trap _kill_procs SIGTERM
@@ -25,9 +28,7 @@ TMP_PROFILE_DIR=`mktemp -d -t chromium.XXXXXX`
 export CHROME_DEBUGGING_PORT=9222
 
 # Start Xvfb
-Xvfb ${DISPLAY} -ac -screen 0 ${GEOMETRY} -nolisten tcp &
-
-xvfb=$!
+Xvfb ${DISPLAY} -ac +iglx -screen 0 ${GEOMETRY} -nolisten tcp & xvfb=$!
 
 printf "Starting xvfb window server"
 
@@ -37,10 +38,11 @@ printf "xvfb started"
 
 printf "Starting chromium, with debugger on port $CHROME_DEBUGGING_POST"
 
+# --disable-webgl \
+
 $LIGHTHOUSE_CHROMIUM_PATH \
 --no-sandbox \
 --user-data-dir=${TMP_PROFILE_DIR}  \
---disable-webgl \
 --start-maximized \
 --remote-debugging-port=${CHROME_DEBUGGING_PORT} \
 --no-first-run "about:blank" &
@@ -52,9 +54,9 @@ wait4ports tcp://127.0.0.1:$CHROME_DEBUGGING_PORT
 printf "chromium started"
 
 printf "launching lighthouse run"
-lighthouse $@
 
 if [ "$testing" -eq "1" ]; then
+   lighthouse --skip-autolaunch --disable-cpu-throttling --output-path=/tmp/test-report.html --output=html https://google.com
    if grep -q -F "Best Practice" /tmp/test-report*; then
       printf "Test succeeded!";
       return 0;
@@ -62,4 +64,6 @@ if [ "$testing" -eq "1" ]; then
 
    printf "Test failed!";
    return 1;
+else
+   lighthouse $@
 fi
